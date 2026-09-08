@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Logs | HelpDesk</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0d1117;
+            --bg-secondary: #161b22;
+            --bg-tertiary: #21262d;
+            --border-color: #30363d;
+            --text-primary: #e6edf3;
+            --text-secondary: #8b949e;
+            --accent-blue: #58a6ff;
+            --accent-green: #3fb950;
+            --accent-yellow: #d29922;
+            --accent-red: #f85149;
+            --accent-purple: #a371f7;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .logo h1 {
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .logo span {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        label {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        input, select {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 8px 12px;
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: 14px;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+        }
+
+        input[type="text"] {
+            width: 180px;
+        }
+
+        input[type="number"] {
+            width: 80px;
+        }
+
+        button {
+            background: var(--accent-blue);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 8px 16px;
+            font-family: inherit;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        button:hover {
+            background: #79b8ff;
+            transform: translateY(-1px);
+        }
+
+        button.secondary {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+        }
+
+        button.secondary:hover {
+            background: var(--border-color);
+        }
+
+        .stats {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 16px 20px;
+            flex: 1;
+            max-width: 200px;
+        }
+
+        .stat-card .value {
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .stat-card .label {
+            color: var(--text-secondary);
+            font-size: 13px;
+        }
+
+        .stat-card.success .value { color: var(--accent-green); }
+        .stat-card.warning .value { color: var(--accent-yellow); }
+        .stat-card.error .value { color: var(--accent-red); }
+        .stat-card.info .value { color: var(--accent-blue); }
+
+        .log-container {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .log-header {
+            background: var(--bg-tertiary);
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .log-header h3 {
+            font-size: 14px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .log-header .dot {
+            width: 8px;
+            height: 8px;
+            background: var(--accent-green);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .log-content {
+            height: 600px;
+            overflow-y: auto;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .log-line {
+            padding: 6px 16px;
+            border-bottom: 1px solid var(--bg-tertiary);
+            display: flex;
+            gap: 12px;
+            transition: background 0.15s;
+        }
+
+        .log-line:hover {
+            background: var(--bg-tertiary);
+        }
+
+        .log-line.info { border-left: 3px solid var(--accent-blue); }
+        .log-line.warning { border-left: 3px solid var(--accent-yellow); background: rgba(210, 153, 34, 0.05); }
+        .log-line.error { border-left: 3px solid var(--accent-red); background: rgba(248, 81, 73, 0.05); }
+        .log-line.success { border-left: 3px solid var(--accent-green); }
+
+        .log-time {
+            color: var(--text-secondary);
+            white-space: nowrap;
+            min-width: 80px;
+        }
+
+        .log-level {
+            font-weight: 600;
+            min-width: 70px;
+            text-transform: uppercase;
+            font-size: 11px;
+        }
+
+        .log-level.info { color: var(--accent-blue); }
+        .log-level.warning { color: var(--accent-yellow); }
+        .log-level.error { color: var(--accent-red); }
+
+        .log-message {
+            flex: 1;
+            word-break: break-word;
+        }
+
+        .log-message .highlight {
+            background: rgba(88, 166, 255, 0.2);
+            padding: 1px 4px;
+            border-radius: 3px;
+        }
+
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 200px;
+            color: var(--text-secondary);
+        }
+
+        .spinner {
+            width: 24px;
+            height: 24px;
+            border: 2px solid var(--border-color);
+            border-top-color: var(--accent-blue);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 12px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-secondary);
+        }
+
+        .empty-state svg {
+            width: 64px;
+            height: 64px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        /* Scrollbar */
+        .log-content::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .log-content::-webkit-scrollbar-track {
+            background: var(--bg-tertiary);
+        }
+
+        .log-content::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        .log-content::-webkit-scrollbar-thumb:hover {
+            background: var(--text-secondary);
+        }
+
+        .badge {
+            background: var(--bg-tertiary);
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .quick-filters {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .quick-filter {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 6px 14px;
+            font-size: 13px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .quick-filter:hover, .quick-filter.active {
+            border-color: var(--accent-blue);
+            color: var(--accent-blue);
+            background: rgba(88, 166, 255, 0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <div class="logo-icon">📋</div>
+                <div>
+                    <h1>System Logs</h1>
+                    <span>HelpDesk AI Agent Monitoring</span>
+                </div>
+            </div>
+            <div class="controls">
+                <div class="control-group">
+                    <label>Filter:</label>
+                    <input type="text" id="filterInput" placeholder="e.g. guardrail, error">
+                </div>
+                <div class="control-group">
+                    <label>Lines:</label>
+                    <input type="number" id="linesInput" value="100" min="10" max="500">
+                </div>
+                <button onclick="fetchLogs()">
+                    <span>🔄</span> Refresh
+                </button>
+                <button class="secondary" onclick="toggleAutoRefresh()">
+                    <span id="autoIcon">▶️</span> Auto
+                </button>
+            </div>
+        </header>
+
+        <div class="quick-filters">
+            <span class="quick-filter" onclick="setFilter('')">All Logs</span>
+            <span class="quick-filter" onclick="setFilter('guardrail')">🛡️ Guardrails</span>
+            <span class="quick-filter" onclick="setFilter('error')">❌ Errors</span>
+            <span class="quick-filter" onclick="setFilter('warning')">⚠️ Warnings</span>
+            <span class="quick-filter" onclick="setFilter('blocked')">🚫 Blocked</span>
+            <span class="quick-filter" onclick="setFilter('chat')">💬 Chat</span>
+        </div>
+
+        <div class="stats">
+            <div class="stat-card info">
+                <div class="value" id="totalLogs">-</div>
+                <div class="label">Total Lines</div>
+            </div>
+            <div class="stat-card success">
+                <div class="value" id="safeLogs">-</div>
+                <div class="label">Safe Checks</div>
+            </div>
+            <div class="stat-card error">
+                <div class="value" id="blockedLogs">-</div>
+                <div class="label">Blocked</div>
+            </div>
+            <div class="stat-card warning">
+                <div class="value" id="errorLogs">-</div>
+                <div class="label">Errors</div>
+            </div>
+        </div>
+
+        <div class="log-container">
+            <div class="log-header">
+                <h3><span class="dot"></span> Live Log Stream</h3>
+                <span class="badge" id="lastUpdate">-</span>
+            </div>
+            <div class="log-content" id="logContent">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    Loading logs...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let autoRefreshInterval = null;
+        let currentFilter = '';
+
+        function setFilter(filter) {
+            currentFilter = filter;
+            document.getElementById('filterInput').value = filter;
+            document.querySelectorAll('.quick-filter').forEach(el => {
+                el.classList.toggle('active', el.textContent.toLowerCase().includes(filter) || (filter === '' && el.textContent === 'All Logs'));
+            });
+            fetchLogs();
+        }
+
+        async function fetchLogs() {
+            const filter = document.getElementById('filterInput').value || currentFilter;
+            const lines = document.getElementById('linesInput').value;
+            
+            try {
+                const url = `/api/logs?lines=${lines}${filter ? '&filter=' + encodeURIComponent(filter) : ''}`;
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                renderLogs(data);
+                updateStats(data.logs);
+                document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString();
+            } catch (error) {
+                document.getElementById('logContent').innerHTML = `
+                    <div class="empty-state">
+                        <div style="font-size: 48px; margin-bottom: 16px;">⚠️</div>
+                        <p>Failed to load logs: ${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        function renderLogs(data) {
+            const container = document.getElementById('logContent');
+            
+            if (!data.logs || data.logs.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div style="font-size: 48px; margin-bottom: 16px;">📭</div>
+                        <p>No logs found matching your filter</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const filter = document.getElementById('filterInput').value.toLowerCase();
+            
+            container.innerHTML = data.logs
+                .filter(line => line.trim())
+                .map(line => {
+                    let level = 'info';
+                    if (line.toLowerCase().includes('error')) level = 'error';
+                    else if (line.toLowerCase().includes('warning') || line.toLowerCase().includes('blocked')) level = 'warning';
+                    else if (line.toLowerCase().includes('safe=true')) level = 'success';
+
+                    // Extract time
+                    const timeMatch = line.match(/(\d{2}:\d{2}:\d{2})/);
+                    const time = timeMatch ? timeMatch[1] : '';
+
+                    // Highlight filter terms
+                    let message = line;
+                    if (filter) {
+                        const regex = new RegExp(`(${filter})`, 'gi');
+                        message = message.replace(regex, '<span class="highlight">$1</span>');
+                    }
+
+                    // Highlight key terms
+                    message = message
+                        .replace(/(safe=True)/gi, '<span style="color: var(--accent-green)">$1</span>')
+                        .replace(/(safe=False)/gi, '<span style="color: var(--accent-red)">$1</span>')
+                        .replace(/(blocked)/gi, '<span style="color: var(--accent-red)">$1</span>')
+                        .replace(/(labels=\w+)/gi, '<span style="color: var(--accent-yellow)">$1</span>');
+
+                    return `
+                        <div class="log-line ${level}">
+                            <span class="log-time">${time}</span>
+                            <span class="log-level ${level}">${level}</span>
+                            <span class="log-message">${message}</span>
+                        </div>
+                    `;
+                })
+                .join('');
+        }
+
+        function updateStats(logs) {
+            if (!logs) return;
+            
+            document.getElementById('totalLogs').textContent = logs.length;
+            document.getElementById('safeLogs').textContent = logs.filter(l => l.includes('safe=True')).length;
+            document.getElementById('blockedLogs').textContent = logs.filter(l => l.toLowerCase().includes('blocked')).length;
+            document.getElementById('errorLogs').textContent = logs.filter(l => l.toLowerCase().includes('error')).length;
+        }
+
+        function toggleAutoRefresh() {
+            const icon = document.getElementById('autoIcon');
+            if (autoRefreshInterval) {
+                clearInterval(autoRefreshInterval);
+                autoRefreshInterval = null;
+                icon.textContent = '▶️';
+            } else {
+                autoRefreshInterval = setInterval(fetchLogs, 5000);
+                icon.textContent = '⏸️';
+                fetchLogs();
+            }
+        }
+
+        // Initial load
+        fetchLogs();
+
+        // Enter key to search
+        document.getElementById('filterInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') fetchLogs();
+        });
+    </script>
+</body>
+</html>
+

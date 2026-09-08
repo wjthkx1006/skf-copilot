@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SKF 在线下单</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', sans-serif;
+    background: #0d1117; color: #e6edf3; min-height: 100vh;
+    display: flex; align-items: center; justify-content: center; padding: 20px;
+  }
+  .card {
+    background: #161b22; border: 1px solid #30363d; border-radius: 16px;
+    width: 100%; max-width: 480px; padding: 32px; box-shadow: 0 8px 32px rgba(0,0,0,.4);
+  }
+  h1 { font-size: 20px; margin-bottom: 4px; }
+  .sub { color: #8b949e; font-size: 13px; margin-bottom: 24px; }
+  .product { display: flex; gap: 16px; align-items: center; background: #0d1117;
+    border: 1px solid #30363d; border-radius: 12px; padding: 16px; margin-bottom: 20px; }
+  .product img { width: 88px; height: 88px; border-radius: 8px; background: #fff; object-fit: contain; }
+  .product .sku { font-size: 17px; font-weight: 600; color: #58a6ff; }
+  .product .desc { font-size: 13px; color: #8b949e; margin-top: 4px; }
+  label { display: block; font-size: 13px; color: #8b949e; margin: 14px 0 6px; }
+  .qty-row { display: flex; gap: 10px; align-items: center; }
+  .qty-row button {
+    width: 40px; height: 40px; border-radius: 8px; border: 1px solid #30363d;
+    background: #21262d; color: #e6edf3; font-size: 18px; cursor: pointer;
+  }
+  .qty-row input {
+    flex: 1; height: 40px; text-align: center; font-size: 16px; border-radius: 8px;
+    border: 1px solid #30363d; background: #0d1117; color: #e6edf3;
+  }
+  .price-box { background: #0d1117; border: 1px solid #30363d; border-radius: 12px;
+    padding: 16px; margin-top: 20px; font-size: 14px; }
+  .price-box .row { display: flex; justify-content: space-between; padding: 4px 0; color: #8b949e; }
+  .price-box .total { border-top: 1px solid #30363d; margin-top: 8px; padding-top: 10px;
+    color: #e6edf3; font-size: 17px; font-weight: 700; }
+  .moq-warn { color: #d29922; font-size: 13px; margin-top: 10px; display: none; }
+  .pay-btn {
+    width: 100%; margin-top: 24px; height: 48px; border: none; border-radius: 10px;
+    background: linear-gradient(135deg, #238636, #2ea043); color: #fff;
+    font-size: 16px; font-weight: 600; cursor: pointer;
+  }
+  .pay-btn:disabled { opacity: .5; cursor: not-allowed; }
+  .success { text-align: center; display: none; }
+  .success .icon { font-size: 56px; margin-bottom: 12px; }
+  .success .oid { color: #58a6ff; font-weight: 700; font-size: 18px; margin: 8px 0 16px; }
+  .back-note { color: #8b949e; font-size: 13px; }
+</style>
+</head>
+<body>
+<div class="card">
+  <div id="form">
+    <h1>🛒 SKF 在线下单</h1>
+    <div class="sub">虚拟支付演示环境，不产生真实交易</div>
+    <div class="product">
+      <img id="pimg" src="" alt="" style="display:none">
+      <div>
+        <div class="sku" id="psku">加载中...</div>
+        <div class="desc" id="pdesc"></div>
+      </div>
+    </div>
+    <label>联系人姓名 *</label>
+    <input id="cname" type="text" placeholder="如：王伟" style="width:100%;height:40px;border-radius:8px;border:1px solid #30363d;background:#0d1117;color:#e6edf3;padding:0 12px;font-size:14px">
+    <label>联系电话 *</label>
+    <input id="cphone" type="tel" placeholder="如：13800001234" style="width:100%;height:40px;border-radius:8px;border:1px solid #30363d;background:#0d1117;color:#e6edf3;padding:0 12px;font-size:14px">
+    <label>收货/服务地址 *</label>
+    <input id="caddr" type="text" placeholder="如：上海市浦东新区川沙路500号" style="width:100%;height:40px;border-radius:8px;border:1px solid #30363d;background:#0d1117;color:#e6edf3;padding:0 12px;font-size:14px">
+    <label>订购数量（可修改）</label>
+    <div class="qty-row">
+      <button onclick="changeQty(-1)">−</button>
+      <input id="qty" type="number" min="1" value="1" oninput="refresh()">
+      <button onclick="changeQty(1)">＋</button>
+    </div>
+    <div class="price-box">
+      <div class="row"><span>单价（不含税）</span><span id="unit">—</span></div>
+      <div class="row"><span>小计（不含税）</span><span id="sub">—</span></div>
+      <div class="row"><span>增值税 13%</span><span id="vat">—</span></div>
+      <div class="row total"><span>含税总价</span><span id="total">—</span></div>
+    </div>
+    <div class="moq-warn" id="moq"></div>
+    <button class="pay-btn" id="payBtn" onclick="pay()">💳 虚拟支付</button>
+  </div>
+  <div class="success" id="success">
+    <div class="icon">✅</div>
+    <h1>支付成功，订单已生成</h1>
+    <div class="oid" id="oid"></div>
+    <button class="pay-btn" style="margin-top:8px" onclick="copyOid()" id="copyBtn">📋 复制订单号</button>
+    <div class="back-note" style="margin-top:16px">请回到原来的对话窗口，告诉客服助手您已下单<br>（例如："我已经下单了，订单号 ORD-xxx"），助手会为您确认订单并安排后续服务。</div>
+  </div>
+</div>
+<script>
+const params = new URLSearchParams(location.search);
+const sku = params.get('sku') || '6205-2RS';
+const cls = (params.get('cls') || 'A').toUpperCase();
+document.getElementById('qty').value = parseInt(params.get('qty') || '1') || 1;
+
+const fmt = n => '¥' + Number(n).toLocaleString('zh-CN', {minimumFractionDigits: 2});
+let timer = null;
+
+function changeQty(d) {
+  const el = document.getElementById('qty');
+  el.value = Math.max(1, (parseInt(el.value) || 1) + d);
+  refresh();
+}
+
+async function refresh() {
+  clearTimeout(timer);
+  timer = setTimeout(async () => {
+    const qty = Math.max(1, parseInt(document.getElementById('qty').value) || 1);
+    const r = await fetch(`/api/skf/quote-calc?sku=${encodeURIComponent(sku)}&qty=${qty}&cls=${cls}`);
+    const q = await r.json();
+    if (q.error) { document.getElementById('psku').textContent = q.error; return; }
+    document.getElementById('psku').textContent = q.sku;
+    document.getElementById('pdesc').textContent = q.description || '';
+    if (q.image_url) {
+      const img = document.getElementById('pimg');
+      img.src = q.image_url; img.style.display = 'block';
+    }
+    document.getElementById('unit').textContent = fmt(q.unit_price);
+    document.getElementById('sub').textContent = fmt(q.subtotal_excl_vat);
+    document.getElementById('vat').textContent = fmt(q.vat_13pct);
+    document.getElementById('total').textContent = fmt(q.total_incl_vat);
+    const moq = document.getElementById('moq');
+    if (!q.moq_ok) {
+      moq.style.display = 'block';
+      moq.textContent = `⚠️ 低于最小起订量（MOQ ${q.moq}），演示环境仍可下单，正式环境需调整数量`;
+    } else moq.style.display = 'none';
+  }, 250);
+}
+
+async function pay() {
+  const cname = document.getElementById('cname').value.trim();
+  const cphone = document.getElementById('cphone').value.trim();
+  const caddr = document.getElementById('caddr').value.trim();
+  if (!cname || !cphone || !caddr) { alert('请填写姓名、电话和地址'); return; }
+  if (!/^1[3-9]\d{9}$/.test(cphone)) { alert('请输入有效的11位手机号'); return; }
+  const btn = document.getElementById('payBtn');
+  btn.disabled = true; btn.textContent = '支付处理中...';
+  const qty = Math.max(1, parseInt(document.getElementById('qty').value) || 1);
+  const r = await fetch('/api/skf/order', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({sku, quantity: qty, distributor_class: cls,
+      customer_name: cname, customer_phone: cphone, customer_address: caddr})
+  });
+  const res = await r.json();
+  if (!res.success) { alert('下单失败: ' + (res.error || '未知错误')); btn.disabled = false; btn.textContent = '💳 虚拟支付'; return; }
+  document.getElementById('form').style.display = 'none';
+  document.getElementById('success').style.display = 'block';
+  document.getElementById('oid').textContent = res.order_id;
+}
+
+function copyOid() {
+  const oid = document.getElementById('oid').textContent;
+  navigator.clipboard.writeText(oid).then(() => {
+    document.getElementById('copyBtn').textContent = '✅ 已复制';
+  });
+}
+
+refresh();
+</script>
+</body>
+</html>

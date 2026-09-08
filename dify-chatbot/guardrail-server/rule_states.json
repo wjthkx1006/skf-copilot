@@ -1,0 +1,11 @@
+{
+  "prompt_injection": true,
+  "pii": true,
+  "financial": true,
+  "harmful": true,
+  "abusive": true,
+  "negative_sentiment": true,
+  "aliyun_guardrail": true,
+  "political_intent": true,
+  "ai_semantic": true
+}

@@ -1,0 +1,14 @@
+FROM python:3.12-slim
+
+WORKDIR /app
+
+COPY deploy/requirements.txt /tmp/requirements.txt
+RUN pip install --no-cache-dir -r /tmp/requirements.txt \
+    -i https://mirrors.aliyun.com/pypi/simple/
+
+# All three backend services live in one image; compose picks the command
+COPY dify-azure-devops-agent /app/dify-azure-devops-agent
+COPY dify-chatbot/guardrail-server /app/guardrail-server
+COPY skf-copilot /app/skf-copilot
+
+EXPOSE 8001 8003 8005

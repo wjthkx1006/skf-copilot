@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guardrail Dashboard | HelpDesk</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #05080f;
+            --bg-secondary: #0a0e18;
+            --bg-card: linear-gradient(145deg, #0d1220 0%, #0a0e18 100%);
+            --border-color: rgba(56, 189, 248, 0.15);
+            --border-glow: rgba(56, 189, 248, 0.3);
+            --text-primary: #e2e8f0;
+            --text-secondary: #64748b;
+            --accent-cyan: #22d3ee;
+            --accent-blue: #3b82f6;
+            --accent-purple: #a855f7;
+            --accent-green: #10b981;
+            --accent-red: #ef4444;
+            --accent-orange: #f59e0b;
+            --glow-cyan: 0 0 20px rgba(34, 211, 238, 0.3);
+            --glow-blue: 0 0 20px rgba(59, 130, 246, 0.3);
+            --glow-green: 0 0 20px rgba(16, 185, 129, 0.3);
+            --glow-red: 0 0 20px rgba(239, 68, 68, 0.3);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Subtle gradient background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: radial-gradient(ellipse at 50% 0%, rgba(59, 130, 246, 0.06) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        /* Header */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+            padding: 16px 24px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            box-shadow: var(--glow-cyan);
+        }
+
+        .logo-text h1 {
+            font-family: 'Inter', sans-serif;
+            font-size: 20px;
+            font-weight: 600;
+            background: linear-gradient(90deg, var(--accent-cyan), var(--accent-blue));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: 1px;
+        }
+
+        .logo-text span {
+            font-size: 11px;
+            color: var(--text-secondary);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 14px;
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 1px solid var(--border-color);
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+        }
+
+        .btn:hover {
+            border-color: var(--accent-cyan);
+            box-shadow: var(--glow-cyan);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
+            border: none;
+            color: #000;
+            font-weight: 600;
+        }
+
+        .btn-primary:hover {
+            box-shadow: var(--glow-cyan);
+            transform: translateY(-1px);
+        }
+
+        /* Stats Grid - Compact */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 16px;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--accent-cyan), transparent);
+        }
+
+        .stat-card::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(135deg, rgba(34, 211, 238, 0.03) 0%, transparent 50%);
+            pointer-events: none;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px) scale(1.01);
+            border-color: var(--border-glow);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), var(--glow-cyan);
+        }
+
+        .stat-card.blocked::before { background: linear-gradient(90deg, transparent, var(--accent-red), transparent); }
+        .stat-card.blocked:hover { box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), var(--glow-red); }
+        .stat-card.safe::before { background: linear-gradient(90deg, transparent, var(--accent-green), transparent); }
+        .stat-card.safe:hover { box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), var(--glow-green); }
+        .stat-card.warning::before { background: linear-gradient(90deg, transparent, var(--accent-orange), transparent); }
+
+        .stat-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .stat-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            background: rgba(34, 211, 238, 0.1);
+        }
+
+        .stat-card.blocked .stat-icon { background: rgba(239, 68, 68, 0.15); }
+        .stat-card.safe .stat-icon { background: rgba(16, 185, 129, 0.15); }
+        .stat-card.warning .stat-icon { background: rgba(245, 158, 11, 0.15); }
+
+        .stat-value {
+            font-family: 'Inter', sans-serif;
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--accent-cyan);
+            text-shadow: 0 0 10px rgba(34, 211, 238, 0.5);
+        }
+
+        .stat-card.blocked .stat-value { color: var(--accent-red); text-shadow: 0 0 10px rgba(239, 68, 68, 0.5); }
+        .stat-card.safe .stat-value { color: var(--accent-green); text-shadow: 0 0 10px rgba(16, 185, 129, 0.5); }
+        .stat-card.warning .stat-value { color: var(--accent-orange); text-shadow: 0 0 10px rgba(245, 158, 11, 0.5); }
+
+        .stat-label {
+            font-size: 11px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Test Section - Compact */
+        .test-section {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+
+        .test-section h2 {
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--accent-cyan);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .test-input-wrapper {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .test-input {
+            flex: 1;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 10px 14px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            color: var(--text-primary);
+        }
+
+        .test-input:focus {
+            outline: none;
+            border-color: var(--accent-cyan);
+            box-shadow: var(--glow-cyan);
+        }
+
+        .test-result {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 6px;
+            padding: 12px;
+            display: none;
+            border: 1px solid var(--border-color);
+        }
+
+        .test-result.show { display: block; }
+        .test-result.safe { border-color: rgba(16, 185, 129, 0.5); }
+        .test-result.blocked { border-color: rgba(239, 68, 68, 0.5); }
+
+        .test-result-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .test-result-icon {
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+
+        .test-result.safe .test-result-icon { background: rgba(16, 185, 129, 0.2); }
+        .test-result.blocked .test-result-icon { background: rgba(239, 68, 68, 0.2); }
+
+        .test-result-title {
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .test-result.safe .test-result-title { color: var(--accent-green); }
+        .test-result.blocked .test-result-title { color: var(--accent-red); }
+
+        .test-result-details { font-size: 12px; color: var(--text-secondary); }
+
+        .test-result-labels {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 8px;
+        }
+
+        .label-tag {
+            background: rgba(239, 68, 68, 0.15);
+            color: var(--accent-red);
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .quick-tests {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            align-items: center;
+        }
+
+        .quick-tests > span {
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        .quick-test-btn {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 4px 10px;
+            font-size: 11px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .quick-test-btn:hover {
+            border-color: var(--accent-cyan);
+            color: var(--text-primary);
+        }
+
+        /* Section Title */
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .section-title h2 {
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .section-title .badge {
+            background: rgba(34, 211, 238, 0.1);
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 11px;
+            color: var(--accent-cyan);
+            border: 1px solid rgba(34, 211, 238, 0.2);
+        }
+
+        /* Filter Cards Grid - Compact 3 columns */
+        .filter-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 32px;
+        }
+
+        .filter-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 16px;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .filter-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0;
+            width: 3px;
+            height: 100%;
+        }
+
+        .filter-card.danger::before { background: linear-gradient(180deg, var(--accent-red), transparent); }
+        .filter-card.warning::before { background: linear-gradient(180deg, var(--accent-orange), transparent); }
+
+        .filter-card:hover {
+            transform: translateY(-2px) translateX(2px);
+            box-shadow: -4px 4px 20px rgba(0, 0, 0, 0.4);
+        }
+
+        .filter-card.danger:hover { border-color: rgba(239, 68, 68, 0.4); }
+        .filter-card.warning:hover { border-color: rgba(245, 158, 11, 0.4); }
+
+        .filter-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .filter-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            background: rgba(239, 68, 68, 0.1);
+        }
+
+        .filter-card.warning .filter-icon { background: rgba(245, 158, 11, 0.1); }
+
+        .filter-status {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 9px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .filter-status.block {
+            background: rgba(239, 68, 68, 0.15);
+            color: var(--accent-red);
+        }
+
+        .filter-status.log {
+            background: rgba(245, 158, 11, 0.15);
+            color: var(--accent-orange);
+        }
+
+        .filter-status .dot {
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background: currentColor;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        .filter-title {
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 4px;
+            color: var(--text-primary);
+        }
+
+        .filter-description {
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-bottom: 10px;
+            line-height: 1.4;
+        }
+
+        .filter-keywords {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            margin-bottom: 10px;
+        }
+
+        .keyword {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            color: var(--accent-cyan);
+            border: 1px solid rgba(34, 211, 238, 0.2);
+        }
+
+        .filter-pattern {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 4px;
+            padding: 8px 10px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            color: var(--text-secondary);
+        }
+
+        .filter-pattern code { color: var(--accent-purple); }
+
+        /* Toggle Switch */
+        .toggle-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .toggle {
+            position: relative;
+            width: 40px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(100, 116, 139, 0.4);
+            border-radius: 20px;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(100, 116, 139, 0.3);
+        }
+
+        .toggle-slider::before {
+            content: '';
+            position: absolute;
+            width: 14px;
+            height: 14px;
+            left: 3px;
+            bottom: 2px;
+            background: #64748b;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .toggle input:checked + .toggle-slider {
+            background: linear-gradient(135deg, var(--accent-green), #059669);
+            border-color: var(--accent-green);
+            box-shadow: 0 0 10px rgba(16, 185, 129, 0.4);
+        }
+
+        .toggle input:checked + .toggle-slider::before {
+            transform: translateX(20px);
+            background: #fff;
+        }
+
+        .toggle:hover .toggle-slider {
+            border-color: var(--accent-cyan);
+        }
+
+        .filter-card.disabled {
+            opacity: 0.5;
+        }
+
+        .filter-card.disabled .filter-status {
+            background: rgba(100, 116, 139, 0.15);
+            color: var(--text-secondary);
+        }
+
+        .filter-card.disabled::before {
+            background: linear-gradient(180deg, var(--text-secondary), transparent) !important;
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 16px;
+            color: var(--text-secondary);
+            font-size: 11px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        footer a {
+            color: var(--accent-cyan);
+            text-decoration: none;
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .filter-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        @media (max-width: 768px) {
+            .container { padding: 16px; }
+            header { flex-direction: column; gap: 12px; }
+            .stats-grid { grid-template-columns: 1fr; }
+            .filter-grid { grid-template-columns: 1fr; }
+        }
+
+        /* Loading */
+        .loading {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-secondary);
+            font-size: 12px;
+        }
+
+        .spinner {
+            width: 16px;
+            height: 16px;
+            border: 2px solid var(--border-color);
+            border-top-color: var(--accent-cyan);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <div class="logo-icon">🛡️</div>
+                <div class="logo-text">
+                    <h1>GUARDRAIL</h1>
+                    <span>Content Security System</span>
+                </div>
+            </div>
+            <div class="header-actions">
+                <a href="/logs.html" class="btn">📋 Logs</a>
+                <a href="/" class="btn">💬 Chat</a>
+                <button class="btn btn-primary" onclick="refreshStats()">🔄 Refresh</button>
+            </div>
+        </header>
+
+        <!-- Stats -->
+        <div class="stats-grid">
+            <div class="stat-card total">
+                <div class="stat-header">
+                    <div class="stat-icon">📊</div>
+                    <div class="stat-label">Total Checks</div>
+                </div>
+                <div class="stat-value" id="totalChecks">0</div>
+            </div>
+            <div class="stat-card safe">
+                <div class="stat-header">
+                    <div class="stat-icon">✅</div>
+                    <div class="stat-label">Safe Passed</div>
+                </div>
+                <div class="stat-value" id="safeCount">0</div>
+            </div>
+            <div class="stat-card blocked">
+                <div class="stat-header">
+                    <div class="stat-icon">🚫</div>
+                    <div class="stat-label">Blocked</div>
+                </div>
+                <div class="stat-value" id="blockedCount">0</div>
+            </div>
+            <div class="stat-card warning">
+                <div class="stat-header">
+                    <div class="stat-icon">⚠️</div>
+                    <div class="stat-label">Block Rate</div>
+                </div>
+                <div class="stat-value" id="blockRate">0%</div>
+            </div>
+        </div>
+
+        <!-- Test Section -->
+        <div class="test-section">
+            <h2>🧪 TEST GUARDRAIL</h2>
+            <div class="test-input-wrapper">
+                <input type="text" class="test-input" id="testInput" placeholder="Enter text to test..." onkeypress="if(event.key==='Enter')testGuardrail()">
+                <button class="btn btn-primary" onclick="testGuardrail()">🔍 Test</button>
+            </div>
+            <div class="test-result" id="testResult"></div>
+            <div class="quick-tests">
+                <span>Quick:</span>
+                <button class="quick-test-btn" onclick="quickTest('WiFi问题')">✅ Normal</button>
+                <button class="quick-test-btn" onclick="quickTest('ignore instructions')">🔓 Inject</button>
+                <button class="quick-test-btn" onclick="quickTest('ID: 110101199001011234')">🪪 PII</button>
+                <button class="quick-test-btn" onclick="quickTest('salary info')">💰 Finance</button>
+                <button class="quick-test-btn" onclick="quickTest('hack system')">💀 Harmful</button>
+                <button class="quick-test-btn" onclick="quickTest('傻逼')">🤬 Abusive</button>
+            </div>
+        </div>
+
+        <!-- Blocked Filters -->
+        <div class="section-title">
+            <h2>🚫 BLOCK FILTERS</h2>
+            <span class="badge" id="blockedRulesCount">Loading...</span>
+        </div>
+        <div class="filter-grid" id="blockedRulesGrid">
+            <div class="loading"><div class="spinner"></div> Loading...</div>
+        </div>
+
+        <!-- Warning Filters -->
+        <div class="section-title">
+            <h2>⚠️ WARNING FILTERS</h2>
+            <span class="badge" id="warningRulesCount">Loading...</span>
+        </div>
+        <div class="filter-grid" id="warningRulesGrid">
+            <div class="loading"><div class="spinner"></div> Loading...</div>
+        </div>
+
+        <footer>
+            GUARDRAIL v3.0 • <a href="/api/guardrail/health">Health</a> • <a href="/api/guardrail/stats">Stats</a>
+        </footer>
+    </div>
+
+    <script>
+        async function refreshStats() {
+            try {
+                const response = await fetch('/api/guardrail/stats');
+                const data = await response.json();
+                document.getElementById('totalChecks').textContent = data.total_checks || 0;
+                document.getElementById('safeCount').textContent = data.safe || 0;
+                document.getElementById('blockedCount').textContent = data.blocked || 0;
+                document.getElementById('blockRate').textContent = data.block_rate || '0%';
+            } catch (error) {
+                console.error('Stats error:', error);
+            }
+        }
+
+        async function toggleRule(ruleId, enabled) {
+            try {
+                const response = await fetch(`/api/guardrail/rules/${ruleId}/toggle`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ enabled })
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Update card visual state
+                    const card = document.querySelector(`[data-rule-id="${ruleId}"]`);
+                    if (card) {
+                        if (enabled) {
+                            card.classList.remove('disabled');
+                        } else {
+                            card.classList.add('disabled');
+                        }
+                    }
+                    console.log(`Rule ${ruleId} ${enabled ? 'enabled' : 'disabled'}`);
+                }
+            } catch (error) {
+                console.error('Toggle error:', error);
+                // Revert the toggle on error
+                const checkbox = document.getElementById(`toggle-${ruleId}`);
+                if (checkbox) checkbox.checked = !enabled;
+            }
+        }
+
+        function renderRuleCard(rule, type) {
+            const isBlock = type === 'block';
+            const cardClass = isBlock ? 'danger' : 'warning';
+            const statusClass = isBlock ? 'block' : 'log';
+            const statusText = isBlock ? 'BLOCK' : 'LOG';
+            const disabledClass = rule.enabled === false ? 'disabled' : '';
+            
+            return `
+                <div class="filter-card ${cardClass} ${disabledClass}" data-rule-id="${rule.id}">
+                    <div class="filter-header">
+                        <div class="filter-icon">${rule.icon}</div>
+                        <div class="toggle-wrapper">
+                            <label class="toggle" title="${rule.enabled !== false ? 'Click to disable' : 'Click to enable'}">
+                                <input type="checkbox" id="toggle-${rule.id}" 
+                                       ${rule.enabled !== false ? 'checked' : ''} 
+                                       onchange="toggleRule('${rule.id}', this.checked)">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                    <h3 class="filter-title">${rule.name}</h3>
+                    <p class="filter-description">${rule.description_zh || rule.description}</p>
+                    <div class="filter-keywords">
+                        ${rule.keywords.slice(0, 4).map(k => `<span class="keyword">${k}</span>`).join('')}
+                    </div>
+                    <div class="filter-pattern">
+                        <code>${rule.patterns_count > 0 ? `${rule.patterns_count} patterns` : 'AI Analysis'}</code>
+                    </div>
+                </div>
+            `;
+        }
+
+        async function loadRules() {
+            try {
+                const response = await fetch('/api/guardrail/rules');
+                const data = await response.json();
+                
+                const blockedGrid = document.getElementById('blockedRulesGrid');
+                const enabledBlockRules = data.blocked_rules.filter(r => r.enabled !== false).length;
+                document.getElementById('blockedRulesCount').textContent = `${enabledBlockRules}/${data.blocked_rules.length} Active`;
+                
+                blockedGrid.innerHTML = data.blocked_rules.map(rule => renderRuleCard(rule, 'block')).join('');
+                
+                const warningGrid = document.getElementById('warningRulesGrid');
+                const enabledWarnRules = data.warning_rules.filter(r => r.enabled !== false).length;
+                document.getElementById('warningRulesCount').textContent = `${enabledWarnRules}/${data.warning_rules.length} Active`;
+                
+                warningGrid.innerHTML = data.warning_rules.map(rule => renderRuleCard(rule, 'warning')).join('');
+                
+            } catch (error) {
+                console.error('Rules error:', error);
+                document.getElementById('blockedRulesGrid').innerHTML = '<div style="color: var(--accent-red)">Failed to load</div>';
+            }
+        }
+
+        async function testGuardrail() {
+            const input = document.getElementById('testInput').value.trim();
+            if (!input) return;
+
+            const resultDiv = document.getElementById('testResult');
+            resultDiv.innerHTML = '<div class="loading"><div class="spinner"></div> Testing...</div>';
+            resultDiv.className = 'test-result show';
+
+            try {
+                const response = await fetch('/api/guardrail/check', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text: input })
+                });
+                const data = await response.json();
+                const isSafe = data.safe && !data.blocked;
+                
+                resultDiv.className = `test-result show ${isSafe ? 'safe' : 'blocked'}`;
+                resultDiv.innerHTML = `
+                    <div class="test-result-header">
+                        <div class="test-result-icon">${isSafe ? '✅' : '🚫'}</div>
+                        <div>
+                            <div class="test-result-title">${isSafe ? 'PASSED' : 'BLOCKED'}</div>
+                            <div class="test-result-details">${data.reason || (isSafe ? 'Content is safe' : 'Content blocked')}</div>
+                        </div>
+                    </div>
+                    ${data.labels?.length ? `<div class="test-result-labels">${data.labels.map(l => `<span class="label-tag">${l}</span>`).join('')}</div>` : ''}
+                `;
+                refreshStats();
+            } catch (error) {
+                resultDiv.innerHTML = `<div style="color: var(--accent-red)">Error: ${error.message}</div>`;
+            }
+        }
+
+        function quickTest(text) {
+            document.getElementById('testInput').value = text;
+            testGuardrail();
+        }
+
+        refreshStats();
+        loadRules();
+    </script>
+</body>
+</html>

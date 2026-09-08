@@ -1,0 +1,30 @@
+# Secrets - transfer these to the target machine manually, NEVER commit
+.env
+.env.docker
+*.env
+dify-azure-devops-agent/.env
+
+# Python
+venv/
+__pycache__/
+*.pyc
+
+# Node
+node_modules/
+dist/
+
+# Large artifacts
+*.tar.gz
+*.tgz
+aliyun-cli-linux-latest-amd64.tgz
+deploy/helpdesk-images.tar.gz
+
+# Logs & runtime
+logs/
+*.log
+
+auth-server.service
+azure-devops-agent.service
+guardrail-server.service
+helpdesk-frontend.service
+skf-copilot.service

@@ -1,0 +1,418 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Azure DevOps ITSM Agent",
+    "description": "AI-powered IT Service Management Agent for creating, querying, updating, and listing tickets in Azure DevOps. Supports natural language interaction.",
+    "version": "v1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://8.220.206.62:8080"
+    }
+  ],
+  "paths": {
+    "/api/chat": {
+      "post": {
+        "description": "AI-powered natural language interface for ticket management. Supports creating, querying, updating, and listing tickets using natural language. Examples: 'My laptop is broken', 'What is the status of ticket 118?', 'Close ticket 115', 'Show all open tickets'",
+        "operationId": "ChatWithAgent",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["message"],
+                "properties": {
+                  "message": {
+                    "type": "string",
+                    "description": "Natural language message describing what you want to do. Examples: 'My VPN is not working', 'Check status of ticket 116', 'Mark ticket 118 as done', 'List all tickets'"
+                  },
+                  "caller": {
+                    "type": "string",
+                    "description": "Optional. Name of the person reporting the issue"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "intent": {
+                      "type": "string",
+                      "description": "Detected intent: CREATE, QUERY, UPDATE, LIST, or HELP"
+                    },
+                    "ai_response": {
+                      "type": "string",
+                      "description": "Human-readable response from the AI"
+                    },
+                    "work_item_id": {
+                      "type": "integer",
+                      "description": "Ticket ID (for CREATE, QUERY, UPDATE)"
+                    },
+                    "url": {
+                      "type": "string",
+                      "description": "Link to the ticket in Azure DevOps"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/api/tickets/create": {
+      "post": {
+        "description": "Create a new ITSM ticket with ServiceNow-style fields including category, subcategory, impact, urgency, etc.",
+        "operationId": "CreateTicket",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["short_description", "description", "category"],
+                "properties": {
+                  "short_description": {
+                    "type": "string",
+                    "description": "Brief summary of the issue (max 100 chars)"
+                  },
+                  "description": {
+                    "type": "string",
+                    "description": "Detailed description of the issue"
+                  },
+                  "category": {
+                    "type": "string",
+                    "description": "Main category: Hardware, Software, Network, Access, Email, Database, Security, Cloud Services, Business Application, General Inquiry"
+                  },
+                  "subcategory": {
+                    "type": "string",
+                    "description": "Subcategory within the main category"
+                  },
+                  "request_type": {
+                    "type": "string",
+                    "enum": ["incident", "service_request", "change_request", "problem"],
+                    "default": "incident",
+                    "description": "Type of request"
+                  },
+                  "impact": {
+                    "type": "integer",
+                    "enum": [1, 2, 3],
+                    "default": 2,
+                    "description": "Business impact: 1=High (organization), 2=Medium (department), 3=Low (individual)"
+                  },
+                  "urgency": {
+                    "type": "integer",
+                    "enum": [1, 2, 3],
+                    "default": 2,
+                    "description": "Urgency level: 1=High (work stopped), 2=Medium (workaround exists), 3=Low (inconvenience)"
+                  },
+                  "caller": {
+                    "type": "string",
+                    "description": "Name of person reporting the issue"
+                  },
+                  "affected_user": {
+                    "type": "string",
+                    "description": "Name of user affected by the issue"
+                  },
+                  "configuration_item": {
+                    "type": "string",
+                    "description": "System/software/hardware affected"
+                  },
+                  "business_service": {
+                    "type": "string",
+                    "description": "Business service impacted"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Ticket created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "work_item_id": {
+                      "type": "integer"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "state": {
+                      "type": "string"
+                    },
+                    "priority": {
+                      "type": "string"
+                    },
+                    "url": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/api/work-items/{work_item_id}": {
+      "get": {
+        "description": "Get details of a specific ticket by ID",
+        "operationId": "GetTicket",
+        "parameters": [
+          {
+            "name": "work_item_id",
+            "in": "path",
+            "description": "The ticket ID to query",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ticket details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "work_item_id": {
+                      "type": "integer"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    },
+                    "state": {
+                      "type": "string"
+                    },
+                    "priority": {
+                      "type": "integer"
+                    },
+                    "assigned_to": {
+                      "type": "string"
+                    },
+                    "url": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "deprecated": false
+      },
+      "patch": {
+        "description": "Update an existing ticket",
+        "operationId": "UpdateTicket",
+        "parameters": [
+          {
+            "name": "work_item_id",
+            "in": "path",
+            "description": "The ticket ID to update",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "title": {
+                    "type": "string",
+                    "description": "New title"
+                  },
+                  "description": {
+                    "type": "string",
+                    "description": "New description"
+                  },
+                  "state": {
+                    "type": "string",
+                    "enum": ["To Do", "Doing", "Done"],
+                    "description": "New state"
+                  },
+                  "priority": {
+                    "type": "integer",
+                    "enum": [1, 2, 3, 4],
+                    "description": "New priority (1=Critical, 2=High, 3=Medium, 4=Low)"
+                  },
+                  "assigned_to": {
+                    "type": "string",
+                    "description": "New assignee"
+                  },
+                  "comment": {
+                    "type": "string",
+                    "description": "Comment to add"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Ticket updated successfully"
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/api/work-items": {
+      "get": {
+        "description": "List tickets with optional filters",
+        "operationId": "ListTickets",
+        "parameters": [
+          {
+            "name": "state",
+            "in": "query",
+            "description": "Filter by state: To Do, Doing, Done",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": ["To Do", "Doing", "Done"]
+            }
+          },
+          {
+            "name": "assigned_to",
+            "in": "query",
+            "description": "Filter by assignee name or email",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Maximum number of tickets to return",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of tickets",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "count": {
+                      "type": "integer"
+                    },
+                    "work_items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "integer"
+                          },
+                          "title": {
+                            "type": "string"
+                          },
+                          "state": {
+                            "type": "string"
+                          },
+                          "priority": {
+                            "type": "integer"
+                          },
+                          "assigned_to": {
+                            "type": "string"
+                          },
+                          "url": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/api/categories": {
+      "get": {
+        "description": "Get all available categories, subcategories, and classification options for tickets",
+        "operationId": "GetCategories",
+        "responses": {
+          "200": {
+            "description": "Available categories and options",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "categories": {
+                      "type": "object",
+                      "description": "Available categories with their subcategories and assignment groups"
+                    },
+                    "request_types": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "impact_levels": {
+                      "type": "object"
+                    },
+                    "urgency_levels": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "deprecated": false
+      }
+    }
+  },
+  "components": {
+    "schemas": {}
+  }
+}
+

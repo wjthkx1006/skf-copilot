@@ -1,0 +1,56 @@
+services:
+  agent:
+    image: helpdesk-backend:latest
+    build:
+      context: .
+      dockerfile: deploy/Dockerfile.backend
+    working_dir: /app/dify-azure-devops-agent
+    command: uvicorn azure_devops_agent:app --host 0.0.0.0 --port 8001
+    env_file: .env.docker
+    restart: unless-stopped
+
+  guardrail:
+    image: helpdesk-backend:latest
+    working_dir: /app/guardrail-server
+    command: uvicorn main:app --host 0.0.0.0 --port 8003
+    env_file: .env.docker
+    environment:
+      - GUARDRAIL_LOG_DIR=/data/logs
+      - RULE_STATES_FILE=/data/rule_states.json
+    volumes:
+      - guardrail-data:/data
+    restart: unless-stopped
+    depends_on:
+      - agent
+
+  skf-copilot:
+    image: helpdesk-backend:latest
+    working_dir: /app/skf-copilot
+    # Seed the catalog DB into the volume on first start so orders persist across rebuilds
+    command: sh -c "[ -f /data/skf.db ] || cp skf.db /data/skf.db; exec uvicorn server:app --host 0.0.0.0 --port 8005"
+    env_file: .env.docker
+    environment:
+      - AGENT_BASE_URL=http://agent:8001
+      - SKF_DB_PATH=/data/skf.db
+    volumes:
+      - skf-data:/data
+    restart: unless-stopped
+    depends_on:
+      - agent
+
+  frontend:
+    build:
+      context: .
+      dockerfile: deploy/Dockerfile.frontend
+    image: helpdesk-frontend:latest
+    ports:
+      - "${FRONTEND_PORT:-4000}:80"
+    restart: unless-stopped
+    depends_on:
+      - agent
+      - guardrail
+      - skf-copilot
+
+volumes:
+  guardrail-data:
+  skf-data:
